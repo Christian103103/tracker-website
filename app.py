@@ -103,11 +103,8 @@ def calculate_calories(entry):
         'push_ups': entry.push_ups * 0.5,    # 0.5 calories per push-up
         'sit_ups': entry.sit_ups * 0.3,      # 0.3 calories per sit-up
         'squats': entry.squats * 0.5,        # 0.5 calories per squat
- codex/add-walking-tracking-for-80-kg
         'running': entry.km_ran * 60,        # 60 calories per km
         'walking': entry.km_walked * 50      # 50 calories per km walked
-        'running': entry.km_ran * 60         # 60 calories per km
- main
     }
     return sum(calories.values())
 
