@@ -22,6 +22,7 @@ class WorkoutEntry(db.Model):
     squats = db.Column(db.Integer, default=0)
     km_ran = db.Column(db.Float, default=0)
     km_walked = db.Column(db.Float, default=0)
+    weight = db.Column(db.Float, default=0)
 
     def to_dict(self):
         data = {
@@ -33,9 +34,16 @@ class WorkoutEntry(db.Model):
             'squats': self.squats,
             'km_ran': self.km_ran,
             'km_walked': self.km_walked,
+            'weight': self.weight,
         }
         data['calories'] = calculate_calories(self)
         return data
+
+
+class UserSettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    walk_speed = db.Column(db.Float, default=5)
+    run_speed = db.Column(db.Float, default=8)
 
 def create_backup():
     if not os.path.exists(BACKUP_FOLDER):
@@ -51,7 +59,8 @@ def create_backup():
             'sit_ups': entry.sit_ups,
             'squats': entry.squats,
             'km_ran': entry.km_ran,
-            'km_walked': entry.km_walked
+            'km_walked': entry.km_walked,
+            'weight': entry.weight
         }
         for entry in entries
     ]
@@ -88,7 +97,8 @@ def restore_latest_backup():
                     sit_ups=entry_data['sit_ups'],
                     squats=entry_data['squats'],
                     km_ran=entry_data['km_ran'],
-                    km_walked=entry_data.get('km_walked', 0)
+                    km_walked=entry_data.get('km_walked', 0),
+                    weight=entry_data.get('weight', 0)
                 )
                 db.session.add(entry)
             
@@ -97,14 +107,21 @@ def restore_latest_backup():
     return False
 
 def calculate_calories(entry):
-    # Approximate calories burned per exercise
+    prefs = UserSettings.query.first()
+    weight = entry.weight if entry.weight else 70
+    run_speed = prefs.run_speed if prefs else 8
+    walk_speed = prefs.walk_speed if prefs else 5
+
+    running_per_km = 1.036 * weight * (run_speed / 8)
+    walking_per_km = 0.53 * weight * (walk_speed / 5)
+
     calories = {
-        'pull_ups': entry.pull_ups * 1,      # 1 calorie per pull-up
-        'push_ups': entry.push_ups * 0.5,    # 0.5 calories per push-up
-        'sit_ups': entry.sit_ups * 0.3,      # 0.3 calories per sit-up
-        'squats': entry.squats * 0.5,        # 0.5 calories per squat
-        'running': entry.km_ran * 60,        # 60 calories per km
-        'walking': entry.km_walked * 50      # 50 calories per km walked
+        'pull_ups': entry.pull_ups * 1,
+        'push_ups': entry.push_ups * 0.5,
+        'sit_ups': entry.sit_ups * 0.3,
+        'squats': entry.squats * 0.5,
+        'running': entry.km_ran * running_per_km,
+        'walking': entry.km_walked * walking_per_km
     }
     return sum(calories.values())
 
@@ -117,7 +134,8 @@ def get_backup_info(backup_data):
             sit_ups=entry['sit_ups'],
             squats=entry['squats'],
             km_ran=entry['km_ran'],
-            km_walked=entry.get('km_walked', 0)
+            km_walked=entry.get('km_walked', 0),
+            weight=entry.get('weight', 0)
         )) for entry in backup_data
     )
     
@@ -134,6 +152,10 @@ def index():
 @app.route('/stats')
 def stats_page():
     return render_template('stats.html')
+
+@app.route('/settings')
+def settings_page():
+    return render_template('settings.html')
 
 @app.route('/api/workout', methods=['GET'])
 def get_workout():
@@ -163,8 +185,39 @@ def update_workout():
         setattr(entry, exercise, value)
         db.session.commit()
         return jsonify(entry.to_dict())
-    
+
     return jsonify({'error': 'Invalid exercise'}), 400
+
+@app.route('/api/settings', methods=['GET'])
+def get_settings():
+    prefs = UserSettings.query.first()
+    today = datetime.now().date()
+    entry = WorkoutEntry.query.filter_by(date=today).first()
+    weight = entry.weight if entry else 0
+    return jsonify({
+        'weight': weight,
+        'walk_speed': prefs.walk_speed if prefs else 5,
+        'run_speed': prefs.run_speed if prefs else 8
+    })
+
+@app.route('/api/settings/update', methods=['POST'])
+def update_settings():
+    data = request.json
+    prefs = UserSettings.query.first()
+    if not prefs:
+        prefs = UserSettings()
+        db.session.add(prefs)
+    prefs.walk_speed = data.get('walk_speed', prefs.walk_speed)
+    prefs.run_speed = data.get('run_speed', prefs.run_speed)
+    today = datetime.now().date()
+    entry = WorkoutEntry.query.filter_by(date=today).first()
+    if not entry:
+        entry = WorkoutEntry(date=today)
+        db.session.add(entry)
+    if 'weight' in data:
+        entry.weight = data['weight']
+    db.session.commit()
+    return jsonify({'status': 'success'})
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
@@ -250,7 +303,8 @@ def restore_specific_backup(backup_id):
             sit_ups=entry_data['sit_ups'],
             squats=entry_data['squats'],
             km_ran=entry_data['km_ran'],
-            km_walked=entry_data.get('km_walked', 0)
+            km_walked=entry_data.get('km_walked', 0),
+            weight=entry_data.get('weight', 0)
         )
         db.session.add(entry)
     
