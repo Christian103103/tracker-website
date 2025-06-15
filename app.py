@@ -131,6 +131,10 @@ def get_backup_info(backup_data):
 def index():
     return render_template('index.html')
 
+@app.route('/stats')
+def stats_page():
+    return render_template('stats.html')
+
 @app.route('/api/workout', methods=['GET'])
 def get_workout():
     today = datetime.now().date()
@@ -175,6 +179,11 @@ def get_stats():
         'total_calories': sum(calculate_calories(entry) for entry in all_entries)
     }
     return jsonify(total_stats)
+
+@app.route('/api/daily_stats', methods=['GET'])
+def get_daily_stats():
+    entries = WorkoutEntry.query.order_by(WorkoutEntry.date).all()
+    return jsonify([entry.to_dict() for entry in entries])
 
 @app.route('/api/reset', methods=['POST'])
 def reset_data():
