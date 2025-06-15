@@ -50,6 +50,7 @@
     <nav class="mb-4">
         <a href="/" class="btn btn-secondary btn-sm">Tracker</a>
         <a href="/stats" class="btn btn-primary btn-sm">Stats</a>
+        <a href="/settings" class="btn btn-secondary btn-sm">Settings</a>
     </nav>
     <h1 class="text-center">Overall Stats</h1>
     <div class="table-responsive mb-4">
@@ -63,6 +64,7 @@
                 <th>Squats</th>
                 <th>Km Ran</th>
                 <th>Km Walked</th>
+                <th>Weight (kg)</th>
                 <th>Calories</th>
             </tr>
             </thead>
@@ -91,6 +93,7 @@ async function loadDailyStats() {
             <td>${entry.squats}</td>
             <td>${entry.km_ran}</td>
             <td>${entry.km_walked}</td>
+            <td>${entry.weight}</td>
             <td>${Math.round(entry.calories)}</td>`;
         tbody.appendChild(row);
         totalCalories += entry.calories;
