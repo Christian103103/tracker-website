@@ -10,6 +10,7 @@ A simple web application to track your daily workouts and calculate calories bur
   - Sit-ups
   - Squats
   - Kilometers ran
+  - Kilometers walked
 - Increment counts by 1, 5, 10, or 20
 - Decrement counts if needed
 - Calculate calories burned (daily and total)
@@ -49,4 +50,5 @@ The application uses the following approximate calorie calculations:
 - Push-ups: 0.5 calories per rep
 - Sit-ups: 0.3 calories per rep
 - Squats: 0.5 calories per rep
-- Running: 60 calories per kilometer 
+- Running: 60 calories per kilometer
+- Walking: 50 calories per kilometer

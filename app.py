@@ -21,6 +21,7 @@ class WorkoutEntry(db.Model):
     sit_ups = db.Column(db.Integer, default=0)
     squats = db.Column(db.Integer, default=0)
     km_ran = db.Column(db.Float, default=0)
+    km_walked = db.Column(db.Float, default=0)
 
     def to_dict(self):
         data = {
@@ -31,6 +32,7 @@ class WorkoutEntry(db.Model):
             'sit_ups': self.sit_ups,
             'squats': self.squats,
             'km_ran': self.km_ran,
+            'km_walked': self.km_walked,
         }
         data['calories'] = calculate_calories(self)
         return data
@@ -48,7 +50,8 @@ def create_backup():
             'push_ups': entry.push_ups,
             'sit_ups': entry.sit_ups,
             'squats': entry.squats,
-            'km_ran': entry.km_ran
+            'km_ran': entry.km_ran,
+            'km_walked': entry.km_walked
         }
         for entry in entries
     ]
@@ -84,7 +87,8 @@ def restore_latest_backup():
                     push_ups=entry_data['push_ups'],
                     sit_ups=entry_data['sit_ups'],
                     squats=entry_data['squats'],
-                    km_ran=entry_data['km_ran']
+                    km_ran=entry_data['km_ran'],
+                    km_walked=entry_data.get('km_walked', 0)
                 )
                 db.session.add(entry)
             
@@ -99,7 +103,8 @@ def calculate_calories(entry):
         'push_ups': entry.push_ups * 0.3,    # 0.3 calories per push-up
         'sit_ups': entry.sit_ups * 0.2,      # 0.2 calories per sit-up
         'squats': entry.squats * 0.5,        # 0.5 calories per squat
-        'running': entry.km_ran * 78         # 78 calories per km
+        'running': entry.km_ran * 78,        # 78 calories per km
+        'walking': entry.km_walked * 50      # 50 calories per km walked
     }
     return sum(calories.values())
 
@@ -111,7 +116,8 @@ def get_backup_info(backup_data):
             push_ups=entry['push_ups'],
             sit_ups=entry['sit_ups'],
             squats=entry['squats'],
-            km_ran=entry['km_ran']
+            km_ran=entry['km_ran'],
+            km_walked=entry.get('km_walked', 0)
         )) for entry in backup_data
     )
     
@@ -165,6 +171,7 @@ def get_stats():
         'total_sit_ups': sum(entry.sit_ups for entry in all_entries),
         'total_squats': sum(entry.squats for entry in all_entries),
         'total_km_ran': sum(entry.km_ran for entry in all_entries),
+        'total_km_walked': sum(entry.km_walked for entry in all_entries),
         'total_calories': sum(calculate_calories(entry) for entry in all_entries)
     }
     return jsonify(total_stats)
@@ -233,7 +240,8 @@ def restore_specific_backup(backup_id):
             push_ups=entry_data['push_ups'],
             sit_ups=entry_data['sit_ups'],
             squats=entry_data['squats'],
-            km_ran=entry_data['km_ran']
+            km_ran=entry_data['km_ran'],
+            km_walked=entry_data.get('km_walked', 0)
         )
         db.session.add(entry)
     
