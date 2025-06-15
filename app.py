@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect, text
 from datetime import datetime
 import os
 import json
@@ -44,6 +45,16 @@ class UserSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     walk_speed = db.Column(db.Float, default=5)
     run_speed = db.Column(db.Float, default=8)
+
+def ensure_columns():
+    """Ensure new columns exist in the workout_entry table."""
+    inspector = inspect(db.engine)
+    columns = [c['name'] for c in inspector.get_columns('workout_entry')]
+    with db.engine.begin() as conn:
+        if 'weight' not in columns:
+            conn.execute(text('ALTER TABLE workout_entry ADD COLUMN weight FLOAT DEFAULT 0'))
+        if 'km_walked' not in columns:
+            conn.execute(text('ALTER TABLE workout_entry ADD COLUMN km_walked FLOAT DEFAULT 0'))
 
 def create_backup():
     if not os.path.exists(BACKUP_FOLDER):
@@ -314,6 +325,7 @@ def restore_specific_backup(backup_id):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        ensure_columns()
         if not os.path.exists(BACKUP_FOLDER):
             os.makedirs(BACKUP_FOLDER)
     port = int(os.environ.get('PORT', 5000))
