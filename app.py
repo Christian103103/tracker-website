@@ -100,10 +100,10 @@ def calculate_calories(entry):
     # Approximate calories burned per exercise
     calories = {
         'pull_ups': entry.pull_ups * 1,      # 1 calorie per pull-up
-        'push_ups': entry.push_ups * 0.3,    # 0.3 calories per push-up
-        'sit_ups': entry.sit_ups * 0.2,      # 0.2 calories per sit-up
+        'push_ups': entry.push_ups * 0.5,    # 0.5 calories per push-up
+        'sit_ups': entry.sit_ups * 0.3,      # 0.3 calories per sit-up
         'squats': entry.squats * 0.5,        # 0.5 calories per squat
-        'running': entry.km_ran * 78,        # 78 calories per km
+        'running': entry.km_ran * 60,        # 60 calories per km
         'walking': entry.km_walked * 50      # 50 calories per km walked
     }
     return sum(calories.values())
