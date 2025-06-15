@@ -45,10 +45,17 @@ http://localhost:5000
 
 ## Calorie Calculations
 
-The application uses the following approximate calorie calculations:
+The application calculates calories using both fixed values and formulas that
+depend on your weight and preferred speeds. You can adjust your weight, walking
+speed and running speed in the **Settings** page.
+
 - Pull-ups: 1 calorie per rep
 - Push-ups: 0.5 calories per rep
 - Sit-ups: 0.3 calories per rep
 - Squats: 0.5 calories per rep
-- Running: 60 calories per kilometer
-- Walking: 50 calories per kilometer
+- Running: `1.036 × weight × (running speed / 8)` calories per kilometer
+- Walking: `0.53 × weight × (walking speed / 5)` calories per kilometer
+
+If you haven't provided values in the settings, the calculation defaults to a
+weight of 70&nbsp;kg, running speed of 8&nbsp;km/h and walking speed of
+5&nbsp;km/h.
